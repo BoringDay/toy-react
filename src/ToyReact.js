@@ -87,11 +87,6 @@ export const ToyReact = {
           }
           ele.appendChild(child)
         }
-
-        if (typeof child === 'string') {
-          child = new TextWrapper(child)
-        }
-        ele.appendChild(child)
       })
     }
 
