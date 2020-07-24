@@ -1,11 +1,16 @@
 // 用于让自定义组件继承的Component
 export class Component {
-  constructor (type) {
+  constructor () {
     this.children = []
+    this.state = {}
   }
 
   setAttribute (name, value) {
+    console.log('name, value', name, value)
     this[name] = value
+
+    // 自定义组件传进来的属性值存到props里面
+    this.state[name] = value
   }
 
   appendChild (vChild) {
@@ -13,19 +18,41 @@ export class Component {
   }
 
   mountTo (parent) {
+    if (parent) this.parent = parent
+
     const vdom = this.render() // 继承该Component写的render返回vdom
-    console.warn('Comp', vdom, parent)
-    vdom.mountTo(parent)
+    this.vdom = vdom.root
+    
+    // 设置实dom属性
+    for (const i in this.state) {
+      vdom.setAttribute(i, this.state[i])
+    }
+
+    vdom.mountTo(this.parent)
+  }
+  setState (state) {
+    this.parent.removeChild(this.vdom);
+    for (const i in state) {
+      this.setAttribute(i, state[i])
+    }
+    this.mountTo()
   }
 }
 
 // 元素节点(真实)
 class ElementWrapper {
   constructor (type) {
-    this.root = document.createElement(type)
+    this.root = window.document.createElement(type)
   }
 
   setAttribute (name, value) {
+    // 添加事件
+    if (name.match(/^on([\s\S]+)$/)) {
+      const eventName = RegExp.$1.replace(/^[\s\S]/, (s) => s.toLocaleLowerCase())
+
+      this.root.addEventListener(eventName, value)
+    }
+
     this.root.setAttribute(name, value)
   }
 
@@ -41,21 +68,21 @@ class ElementWrapper {
 // 文本节点(真实)
 class TextWrapper {
   constructor (type) {
-    this.root = document.createTextNode(type);
+    this.root = window.document.createTextNode(type)
   }
 
   appendChild (vChild) {
-    vChild.mountTo(this.root);
+    vChild.mountTo(this.root)
   }
 
   mountTo (parent) {
-    parent.appendChild(this.root);
+    parent.appendChild(this.root)
   }
 }
 
 export const ToyReact = {
   createElement (type, attrs, ...children) {
-    console.log('ToyReact createElement', type, attrs, ...children)
+    // console.log('ToyReact createElement', type, attrs, ...children)
     let ele
 
     if (typeof type === 'string') {
@@ -70,7 +97,6 @@ export const ToyReact = {
       ele.setAttribute(i, attrs[i])
     }
 
-    console.log('children', children.length, Object.keys(children))
     const insertChildren = (children) => {
       children.forEach(child => {
         if (typeof child === 'object' && child instanceof Array) {

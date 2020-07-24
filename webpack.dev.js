@@ -9,6 +9,7 @@ module.exports = {
     path: path.resolve(__dirname, 'dist')
   },
   devServer: {
+    overlay: true, // 代码报错是页面会出现蒙层提示错误
     contentBase: './dist',
     disableHostCheck: true,
     open: true,
@@ -28,8 +29,18 @@ module.exports = {
       },
       {
         test: /\.js$/,
-        loader: 'babel-loader',
-        exclude: /node_modules/
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'babel-loader'
+          }
+          // {
+          //   loader: 'eslint-loader',
+          //   options: {
+          //     fix: true
+          //   }
+          // }
+        ]
       },
       {
         test: /\.scss$/,
