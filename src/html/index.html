@@ -30,5 +30,23 @@
 
   </head>
   <body>
+    <div id="box" class="box">
+      abcd
+      <span>1</span>
+      <p>1</p>
+    </div>
+    <script>
+      var range1 = document.createRange()
+      var range2 = document.createRange()
+      var box = document.getElementById('box')
+      range1.setStart(box,0)
+      // range1.setEnd(box,0)
+      
+      range2.setStartAfter(box,0)
+      range2.setEndAfter(box,0)
+      range1.deleteContents()
+      console.log('range1', range1)
+      // console.log('range2', range2)
+    </script>
   </body>
 </html>

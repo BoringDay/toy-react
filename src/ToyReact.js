@@ -1,16 +1,20 @@
+import { ElementWrapper, TextWrapper } from './Dom/Element'
+
 // 用于让自定义组件继承的Component
 export class Component {
   constructor () {
     this.children = []
     this.state = {}
+    this.props = Object.create(null) // 这样创建空对象没没有.toString==的方法
   }
 
   setAttribute (name, value) {
-    console.log('name, value', name, value)
     this[name] = value
 
+    if (name === 'className') name = 'class'
+
     // 自定义组件传进来的属性值存到props里面
-    this.state[name] = value
+    this.props[name] = value
   }
 
   appendChild (vChild) {
@@ -20,63 +24,29 @@ export class Component {
   mountTo (parent) {
     if (parent) this.parent = parent
 
+    if(this.vdom) this.parent.removeChild(this.vdom);
+
     const vdom = this.render() // 继承该Component写的render返回vdom
     this.vdom = vdom.root
-    
+
     // 设置实dom属性
-    for (const i in this.state) {
-      vdom.setAttribute(i, this.state[i])
+    for (const i in this.props) {
+      vdom.setAttribute(i, this.props[i])
     }
 
     vdom.mountTo(this.parent)
   }
-  setState (state) {
-    this.parent.removeChild(this.vdom);
-    for (const i in state) {
-      this.setAttribute(i, state[i])
-    }
+
+  update () {
     this.mountTo()
   }
-}
 
-// 元素节点(真实)
-class ElementWrapper {
-  constructor (type) {
-    this.root = window.document.createElement(type)
-  }
-
-  setAttribute (name, value) {
-    // 添加事件
-    if (name.match(/^on([\s\S]+)$/)) {
-      const eventName = RegExp.$1.replace(/^[\s\S]/, (s) => s.toLocaleLowerCase())
-
-      this.root.addEventListener(eventName, value)
-    }
-
-    this.root.setAttribute(name, value)
-  }
-
-  appendChild (vChild) {
-    vChild.mountTo(this.root)
-  }
-
-  mountTo (parent) {
-    parent.appendChild(this.root)
-  }
-}
-
-// 文本节点(真实)
-class TextWrapper {
-  constructor (type) {
-    this.root = window.document.createTextNode(type)
-  }
-
-  appendChild (vChild) {
-    vChild.mountTo(this.root)
-  }
-
-  mountTo (parent) {
-    parent.appendChild(this.root)
+  // 设置属性merge
+  setState (state) {
+    // 将state合并到this.state里面去
+    const newState = Object.assign(this.state, state)
+    this.state = newState
+    this.update()
   }
 }
 
@@ -119,7 +89,7 @@ export const ToyReact = {
     insertChildren(children)
     return ele
   },
-  render (vdom, parent) {
-    vdom.mountTo(parent)
+  render (vdom, element) {
+    vdom.mountTo(element)
   }
 }
